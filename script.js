@@ -53,8 +53,12 @@ const makeGameBoard = (function() {
 
 const makeWinStates = ( function() {
   // check if all 3 in the same row or column have the same mark
-  const checkLineWin = ( marked, whereToCheck ) => {
-    const matchingSquares = gameboard.squares.filter( ( square ) => square[whereToCheck] === marked );
+  const checkLineWin = ( rowOrColumnNumber, whereToCheck ) => {
+    if ( whereToCheck !== "row" && whereToCheck !== "column" ) {
+      alert(`Somehow whereToCheck is wrong. Current val is ${whereToCheck}`);
+      return
+    } 
+    const matchingSquares = gameboard.squares.filter( ( square ) => square[whereToCheck] === rowOrColumnNumber );
     // must have 3 squares, none of them empty
     if (matchingSquares.length !== 3 || matchingSquares.some(square => square.getCurrentMark() === "")) {
       return false;
@@ -71,7 +75,62 @@ const makeWinStates = ( function() {
   const checkColumnWin = ( markedColumn )  => {
     return checkLineWin( markedColumn, "column" );
   };
-  // check the two diagonal for the same mark
+  const getSquare = ( whichRow, whichColumn, ) => {
+    // return the square the has the specific row and column
+    // intentionally verbose variable names, didn't want to conflict with square.row or square.column naming
+    if (( whichRow <= 0 ) || ( whichRow > 3 ) || ( isNaN( whichRow ) )) {
+      alert(`Somehow whichRow is wrong. Current val is ${whichRow}`);
+      return
+    } 
+    if (( whichColumn <= 0 ) || ( whichColumn > 3 ) || ( isNaN( whichColumn ) )) {
+      alert(`Somehow whichColumn is wrong. Current val is ${whichColumn}`);
+      return
+    } 
+    return gameboard.squares.find( ( square ) => ( square.row === whichRow && square.column === whichColumn ));
+  }
 
-  gameboard.checkWinStates = { checkRowWin, checkColumnWin };
+    // inelegant maybe but I need square 1, 5, 9 for first diag, 3, 5, 7 for second. It would be overly complicated to .map() two coordinate arrays.
+  function getFirstDiagonalArray() {
+    const firstDiagonal = [];
+    firstDiagonal.push(getSquare( 1, 1 ));
+    firstDiagonal.push(getSquare( 2, 2 ));
+    firstDiagonal.push(getSquare( 3, 3 ));
+    return firstDiagonal;
+  }
+
+  function getSecondDiagonalArray() {
+    const secondDiagonal = [];
+    secondDiagonal.push(getSquare( 1, 3 ));
+    secondDiagonal.push(getSquare( 2, 2 ));
+    secondDiagonal.push(getSquare( 3, 1 ));
+    return secondDiagonal;
+  }
+
+  const checkDiagonalWin = ( markedRow, markedColumn ) => {
+    
+    const firstDiagonal = getFirstDiagonalArray();
+    const secondDiagonal = getSecondDiagonalArray();
+    const currentSquare = getSquare( markedRow, markedColumn );
+    
+      if ( !currentSquare || currentSquare.getCurrentMark() === "" ) {
+        return false
+      };
+
+        // Check only the diagonal(s) that contain the current square
+        if (firstDiagonal.includes(currentSquare)) {
+          if (firstDiagonal.every(square => square.getCurrentMark() === currentSquare.getCurrentMark())) {
+              return true;
+          }
+      }
+      if (secondDiagonal.includes(currentSquare)) {
+          if (secondDiagonal.every(square => square.getCurrentMark() === currentSquare.getCurrentMark())) {
+              return true;
+          }
+      }
+      return false;
+  }
+  gameboard.checkWinStates = { checkRowWin, checkColumnWin, checkDiagonalWin };
 })();
+
+
+
