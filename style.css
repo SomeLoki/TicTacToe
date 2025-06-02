@@ -1,0 +1,16 @@
+body {
+ box-sizing: border-box;
+}
+
+.game-container {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+}
+
+.game-container > * {
+  background-color: red;
+  text-align: center;
+  height: 100px;
+  width: 100px;
+  border: 1px solid black
+}

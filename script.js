@@ -1,18 +1,15 @@
 const gameBoard = {};
 
 function createPlayer (name, mark) {
-
   let playerWins = 0;
   const getPlayerWins = () => playerWins;
   const increasePlayerWins = () => ++playerWins;
   const resetPlayerWins = () => playerWins = 0;
 
   return { name, mark, getPlayerWins, increasePlayerWins, resetPlayerWins };
-
 };  
 
 const makePlayers = (function() {
-// create two players and add to the gameBoard
   const playerOne = createPlayer("playerOne", "O");
   const playerTwo = createPlayer("playerTwo", "X");
 
@@ -22,18 +19,16 @@ const makePlayers = (function() {
 
 function creategameBoardSquare (row, column) {
   const squareId = `row${row}col${column}`;
-
   let currentMark = "";
+  
   const getCurrentMark = () => currentMark;
-  // check if there is an existing mark before changing it
-  const changeCurrentMark = (newMark) => (!currentMark) ? currentMark = newMark : console.log("Invalid choice");
+  const changeCurrentMark = (newMark) => currentMark = newMark;
   const resetCurrentMark = () => currentMark = "";
 
   return { squareId, row, column, getCurrentMark, changeCurrentMark, resetCurrentMark };
-
 };
 
-const makegameBoard = (function() {
+gameBoard.squares = (function() {
 // Create a 3x3 gameBoard with squares and add to gameBoard
   const gamesquares = [];
 
@@ -42,18 +37,19 @@ const makegameBoard = (function() {
       gamesquares.push(creategameBoardSquare( row, column ));
     };
   };
-  gameBoard.squares = gamesquares;
+  return gamesquares;
 })();
 
 const makeEndStates = ( function() {
+  const ROW = "row";
+  const COLUMN = "column"
   // check if all 3 in the same row or column have the same mark
   const checkLineWin = ( rowOrColumnNumber, whereToCheck ) => {
-    if ( whereToCheck !== "row" && whereToCheck !== "column" ) {
+    if ( whereToCheck !== ROW && whereToCheck !== COLUMN ) {
       console.log(`Somehow whereToCheck is wrong. Current val is ${whereToCheck}`);
       return false;
     }; 
     const matchingSquares = gameBoard.squares.filter( ( square ) => square[whereToCheck] === rowOrColumnNumber );
-    // must have 3 squares, none of them empty
     if (matchingSquares.length !== 3 || matchingSquares.some(square => square.getCurrentMark() === "")) {
       return false;
     };
@@ -62,13 +58,8 @@ const makeEndStates = ( function() {
   };
 
   // both of these just reuse checkLineWin, but for readability they are separate calls.
-  const checkRowWin = ( rowNumber )  => {
-    return checkLineWin( rowNumber, "row" );
-  };
-
-  const checkColumnWin = ( columnNumber )  => {
-    return checkLineWin( columnNumber, "column" );
-  };
+  const checkRowWin = ( rowNumber ) => checkLineWin( rowNumber, ROW );
+  const checkColumnWin = ( columnNumber ) => checkLineWin( columnNumber, COLUMN );
 
   const validateRowOrColumn = function( rowOrColumn ) {
     if (( rowOrColumn <= 0 ) || ( rowOrColumn > 3 ) || ( isNaN( rowOrColumn ) )) {
@@ -76,42 +67,14 @@ const makeEndStates = ( function() {
     }; 
     return true;
   };
+  // intentionally verbose variable names, didn't want to conflict with square.row or square.column naming
+  const getSquare = ( whichRow, whichColumn ) => gameBoard.squares.find( ( square ) => ( square.row === whichRow && square.column === whichColumn ));
   
-  const getSquare = function( whichRow, whichColumn ) {
-    // return the square the has the specific row and column
-    // intentionally verbose variable names, didn't want to conflict with square.row or square.column naming
-    if ( !validateRowOrColumn( whichRow ) ) {
-      console.log(`Somehow whichRow is wrong. Current val is ${whichRow}`);
-      return;
-    }; 
-    if ( !validateRowOrColumn( whichColumn ) ) {
-      console.log(`Somehow whichColumn is wrong. Current val is ${whichColumn}`);
-      return;
-    }; 
-    return gameBoard.squares.find( ( square ) => ( square.row === whichRow && square.column === whichColumn ));
-  };
-
-    // inelegant maybe but I need square 1, 5, 9 for first diag, 3, 5, 7 for second. It would be overly complicated to .map() two coordinate arrays.
-  function getFirstDiagonalArray() {
-    const firstDiagonal = [];
-    firstDiagonal.push(getSquare( 1, 1 ));
-    firstDiagonal.push(getSquare( 2, 2 ));
-    firstDiagonal.push(getSquare( 3, 3 ));
-    return firstDiagonal;
-  };
-
-  function getSecondDiagonalArray() {
-    const secondDiagonal = [];
-    secondDiagonal.push(getSquare( 1, 3 ));
-    secondDiagonal.push(getSquare( 2, 2 ));
-    secondDiagonal.push(getSquare( 3, 1 ));
-    return secondDiagonal;
-  };
+  const firstDiagonal = [ getSquare(1, 1), getSquare(2, 2), getSquare(3, 3) ];
+  const secondDiagonal = [ getSquare(1, 3), getSquare(2, 2), getSquare(3, 1) ];
 
   const checkDiagonalWin = ( rowNumber, columnNumber ) => {
     
-    const firstDiagonal = getFirstDiagonalArray();
-    const secondDiagonal = getSecondDiagonalArray();
     const currentSquare = getSquare( rowNumber, columnNumber );
     
       if ( !currentSquare || currentSquare.getCurrentMark() === "" ) {
@@ -144,10 +107,7 @@ const makeEndStates = ( function() {
     return ( checkRowWin( rowNumber ) || checkColumnWin( columnNumber ) || checkDiagonalWin ( rowNumber, columnNumber ) );
   }
 
-  const checkForTie = () => {
-    // check if every square is marked.
-    return ( gameBoard.squares.every( (square) => square.getCurrentMark() !== "" ))
-  };
+  const checkForTie = () => ( gameBoard.squares.every( (square) => square.getCurrentMark() !== "" ));
 
   gameBoard.checkEndStates = { checkForWin, checkForTie };
 })();
@@ -157,10 +117,10 @@ const makeGamePlay = (function() {
   const PLAYER_TWO = "playerTwo";
 
   let whoseTurn = PLAYER_ONE;
-
   const getWhoseTurn = () => whoseTurn;
   const swapWhoseTurn = () => ( whoseTurn === PLAYER_ONE ) ? whoseTurn = PLAYER_TWO : whoseTurn = PLAYER_ONE;
   const getSquareById = ( matchId ) => gameBoard.squares.find( ( square ) => square.squareId === matchId );
+  const resetAllSquareMarks = () => gameBoard.squares.forEach( ( square ) => square.resetCurrentMark );
 
   const playerTurn = ( squareId ) => {
     const square = getSquareById( squareId );
@@ -184,11 +144,17 @@ const makeGamePlay = (function() {
     if ( gameBoard.checkEndStates.checkForTie() ) {
       console.log("It was a tie");
     }
-
     swapWhoseTurn();
   }
+  gameBoard.gamePlay = { playerTurn, resetAllSquareMarks };
+})();
 
-  gameBoard.gamePlay = { playerTurn };
-  console.log(gameBoard);
+const makeDisplayController = (function() {
+  const boardSquaresArray = document.querySelectorAll(".game-container > *");
+
+  for ( let square of boardSquaresArray ) {
+    square.addEventListener("click", () => gameBoard.gamePlay.playerTurn( square.className ));
+  };
+
 })();
 
