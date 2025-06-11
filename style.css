@@ -2,12 +2,16 @@ body {
  box-sizing: border-box;
 }
 
-.game-container {
+body,
+.container {
   display: grid;
+}
+
+.game {
   grid-template-columns: repeat(3, 100px);
 }
 
-.game-container > * {
+.game > * {
   background-color: red;
   text-align: center;
   height: 100px;

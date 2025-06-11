@@ -43,7 +43,20 @@ gameBoard.squares = (function() {
 const makeEndStates = ( function() {
   const ROW = "row";
   const COLUMN = "column"
-  // check if all 3 in the same row or column have the same mark
+
+  const validateRowOrColumn = function( rowOrColumn ) {
+    if (( rowOrColumn <= 0 ) || ( rowOrColumn > 3 ) || ( isNaN( rowOrColumn ) )) {
+      return false;
+    }; 
+    return true;
+  };
+
+  // intentionally verbose variable names, didn't want to conflict with square.row or square.column naming
+  const getSquare = ( whichRow, whichColumn ) => gameBoard.squares.find( ( square ) => ( square.row === whichRow && square.column === whichColumn ));
+
+  const firstDiagonal = [ getSquare(1, 1), getSquare(2, 2), getSquare(3, 3) ];
+  const secondDiagonal = [ getSquare(1, 3), getSquare(2, 2), getSquare(3, 1) ];
+
   const checkLineWin = ( rowOrColumnNumber, whereToCheck ) => {
     if ( whereToCheck !== ROW && whereToCheck !== COLUMN ) {
       console.log(`Somehow whereToCheck is wrong. Current val is ${whereToCheck}`);
@@ -61,20 +74,7 @@ const makeEndStates = ( function() {
   const checkRowWin = ( rowNumber ) => checkLineWin( rowNumber, ROW );
   const checkColumnWin = ( columnNumber ) => checkLineWin( columnNumber, COLUMN );
 
-  const validateRowOrColumn = function( rowOrColumn ) {
-    if (( rowOrColumn <= 0 ) || ( rowOrColumn > 3 ) || ( isNaN( rowOrColumn ) )) {
-      return false;
-    }; 
-    return true;
-  };
-  // intentionally verbose variable names, didn't want to conflict with square.row or square.column naming
-  const getSquare = ( whichRow, whichColumn ) => gameBoard.squares.find( ( square ) => ( square.row === whichRow && square.column === whichColumn ));
-  
-  const firstDiagonal = [ getSquare(1, 1), getSquare(2, 2), getSquare(3, 3) ];
-  const secondDiagonal = [ getSquare(1, 3), getSquare(2, 2), getSquare(3, 1) ];
-
-  const checkDiagonalWin = ( rowNumber, columnNumber ) => {
-    
+  const checkDiagonalWin = ( rowNumber, columnNumber ) => {    
     const currentSquare = getSquare( rowNumber, columnNumber );
     
       if ( !currentSquare || currentSquare.getCurrentMark() === "" ) {
@@ -115,16 +115,22 @@ const makeEndStates = ( function() {
 const makeGamePlay = (function() {
   const PLAYER_ONE = "playerOne";
   const PLAYER_TWO = "playerTwo";
-
   let whoseTurn = PLAYER_ONE;
+  let isGameActive = true;
+
+  const checkGameActive = () => isGameActive;
+  const swapGameActive = () => isGameActive = !isGameActive;
   const getWhoseTurn = () => whoseTurn;
   const swapWhoseTurn = () => ( whoseTurn === PLAYER_ONE ) ? whoseTurn = PLAYER_TWO : whoseTurn = PLAYER_ONE;
   const getSquareById = ( matchId ) => gameBoard.squares.find( ( square ) => square.squareId === matchId );
-  const resetAllSquareMarks = () => gameBoard.squares.forEach( ( square ) => square.resetCurrentMark );
 
   const playerTurn = ( squareId ) => {
     const square = getSquareById( squareId );
     const currentPlayer = gameBoard[getWhoseTurn()];
+
+    if ( !checkGameActive() ) {
+      return;
+    };
 
     // if the block already has a mark alert player and force them to pic a new square
     if ( square.getCurrentMark() ) {
@@ -133,28 +139,51 @@ const makeGamePlay = (function() {
     };
 
     square.changeCurrentMark( currentPlayer.mark );
+    gameBoard.displayController.updateElementDisplay( square.squareId, currentPlayer.mark );
     console.log(`${currentPlayer.name} marked ${square.squareId} with ${square.getCurrentMark()}. For debug player mark is ${currentPlayer.mark}`)
 
     if ( gameBoard.checkEndStates.checkForWin( square.row, square.column ) ) {
       console.log(`Player ${currentPlayer.name} has won!`);
       currentPlayer.increasePlayerWins();
-      // add reset logic later right now 
+      swapGameActive();
     };
 
     if ( gameBoard.checkEndStates.checkForTie() ) {
       console.log("It was a tie");
+      swapGameActive();
     }
     swapWhoseTurn();
   }
-  gameBoard.gamePlay = { playerTurn, resetAllSquareMarks };
+
+  const resetAllSquareMarks = () => {
+    gameBoard.squares.forEach( ( square ) => square.resetCurrentMark() );
+    gameBoard.displayController.resetFullBoard();
+    swapGameActive();
+  }
+
+  gameBoard.gamePlay = { playerTurn, resetAllSquareMarks, getWhoseTurn };
 })();
 
 const makeDisplayController = (function() {
-  const boardSquaresArray = document.querySelectorAll(".game-container > *");
+  const ALL_SQUARES = ".game > *";
+
+  const boardSquaresArray = document.querySelectorAll(ALL_SQUARES);
 
   for ( let square of boardSquaresArray ) {
     square.addEventListener("click", () => gameBoard.gamePlay.playerTurn( square.className ));
   };
 
-})();
+  const updateElementDisplay = ( classToMatch , newContent ) => {
+    const element = document.querySelector( `.${classToMatch}` );
+    element.textContent = newContent;
+  }
 
+  const resetFullBoard = () => {
+    for ( let square of boardSquaresArray ) square.textContent = "";
+  }
+  
+
+  gameBoard.displayController = { updateElementDisplay, resetFullBoard };
+
+
+})();
