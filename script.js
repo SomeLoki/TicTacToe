@@ -43,19 +43,15 @@ gameBoard.squares = (function() {
 const makeEndStates = ( function() {
   const ROW = "row";
   const COLUMN = "column"
-
+  const getSquare = ( whichRow, whichColumn ) => gameBoard.squares.find( ( square ) => ( square.row === whichRow && square.column === whichColumn ));
+  const firstDiagonal = [ getSquare(1, 1), getSquare(2, 2), getSquare(3, 3) ];
+  const secondDiagonal = [ getSquare(1, 3), getSquare(2, 2), getSquare(3, 1) ];
   const validateRowOrColumn = function( rowOrColumn ) {
     if (( rowOrColumn <= 0 ) || ( rowOrColumn > 3 ) || ( isNaN( rowOrColumn ) )) {
       return false;
     }; 
     return true;
   };
-
-  // intentionally verbose variable names, didn't want to conflict with square.row or square.column naming
-  const getSquare = ( whichRow, whichColumn ) => gameBoard.squares.find( ( square ) => ( square.row === whichRow && square.column === whichColumn ));
-
-  const firstDiagonal = [ getSquare(1, 1), getSquare(2, 2), getSquare(3, 3) ];
-  const secondDiagonal = [ getSquare(1, 3), getSquare(2, 2), getSquare(3, 1) ];
 
   const checkLineWin = ( rowOrColumnNumber, whereToCheck ) => {
     if ( whereToCheck !== ROW && whereToCheck !== COLUMN ) {
@@ -132,7 +128,6 @@ const makeGamePlay = (function() {
       return;
     };
 
-    // if the block already has a mark alert player and force them to pic a new square
     if ( square.getCurrentMark() ) {
       alert("Invalid choice - That square is already marked.");
       return;
@@ -146,44 +141,58 @@ const makeGamePlay = (function() {
       console.log(`Player ${currentPlayer.name} has won!`);
       currentPlayer.increasePlayerWins();
       swapGameActive();
+      swapWhoseTurn();
+      return;
     };
 
     if ( gameBoard.checkEndStates.checkForTie() ) {
       console.log("It was a tie");
       swapGameActive();
+      swapWhoseTurn();
+      return;
     }
     swapWhoseTurn();
   }
 
-  const resetAllSquareMarks = () => {
+  const resetGameBoard = () => {
     gameBoard.squares.forEach( ( square ) => square.resetCurrentMark() );
     gameBoard.displayController.resetFullBoard();
     swapGameActive();
   }
 
-  gameBoard.gamePlay = { playerTurn, resetAllSquareMarks, getWhoseTurn };
+  gameBoard.gamePlay = { playerTurn, resetGameBoard, getWhoseTurn };
 })();
 
 const makeDisplayController = (function() {
-  const ALL_SQUARES = ".game > *";
+  const allSquares = document.querySelectorAll(".game > *");
+  const TURN_DISPLAY = "turn-display";
 
-  const boardSquaresArray = document.querySelectorAll(ALL_SQUARES);
-
-  for ( let square of boardSquaresArray ) {
+  const updateTurnText = () => `${gameBoard.gamePlay.getWhoseTurn()}'s turn`;
+  const updateTurnDisplay = () => updateElementDisplay( TURN_DISPLAY, updateTurnText() );
+  const updatePlayerScore = ( player ) => updateElementDisplay ( `${player} > .score`, gameBoard[player].getPlayerWins() );
+  
+  for ( let square of allSquares ) {
     square.addEventListener("click", () => gameBoard.gamePlay.playerTurn( square.className ));
   };
 
   const updateElementDisplay = ( classToMatch , newContent ) => {
     const element = document.querySelector( `.${classToMatch}` );
     element.textContent = newContent;
-  }
+  };
 
   const resetFullBoard = () => {
-    for ( let square of boardSquaresArray ) square.textContent = "";
-  }
-  
-
-  gameBoard.displayController = { updateElementDisplay, resetFullBoard };
+    for ( let square of allSquares ) square.textContent = "";
+  };
 
 
+
+  gameBoard.displayController = { updateElementDisplay, resetFullBoard, updateTurnDisplay, updatePlayerScore };
+})();
+
+const initializeDisplays = ( function () {
+  gameBoard.displayController.updateTurnDisplay()
+  gameBoard.displayController.updatePlayerScore( "playerOne");
+  gameBoard.displayController.updatePlayerScore( "playerTwo");
+  gameBoard.displayController.updateElementDisplay( "playerOne > .name", "Player One" );
+  gameBoard.displayController.updateElementDisplay( "playerTwo > .name", "Player Two" );
 })();

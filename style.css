@@ -21,16 +21,16 @@ body > .container {
   grid-template-columns: repeat(2, auto);
 }
 
-.playerone,
-.playertwo {
+.playerOne,
+.playerTwo {
   grid-template-rows: 40px 60px;
 }
 
-.playerone {
+.playerOne {
   background-color: green;
 }
 
-.playertwo {
+.playerTwo {
   background-color: blue;
 }
 
