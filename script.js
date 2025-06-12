@@ -12,7 +12,7 @@ function createPlayer (name, mark) {
   return { name, mark, getPlayerWins, increasePlayerWins, resetPlayerWins };
 };  
 
-const makePlayers = (function() {
+const initPlayers = (function() {
   const playerOne = createPlayer("playerOne", "O");
   const playerTwo = createPlayer("playerTwo", "X");
 
@@ -32,7 +32,6 @@ function creategameBoardSquare (row, column) {
 };
 
 gameBoard.squares = (function() {
-// Create a 3x3 gameBoard with squares and add to gameBoard
   const gamesquares = [];
 
   for ( let row = 1; row < 4; row++ ) {
@@ -43,9 +42,10 @@ gameBoard.squares = (function() {
   return gamesquares;
 })();
 
-const makeEndStates = ( function() {
+const initEndStates = ( function() {
   const ROW = "row";
   const COLUMN = "column"
+
   const getSquare = ( whichRow, whichColumn ) => gameBoard.squares.find( ( square ) => ( square.row === whichRow && square.column === whichColumn ));
   const firstDiagonal = [ getSquare(1, 1), getSquare(2, 2), getSquare(3, 3) ];
   const secondDiagonal = [ getSquare(1, 3), getSquare(2, 2), getSquare(3, 1) ];
@@ -58,7 +58,7 @@ const makeEndStates = ( function() {
 
   const checkLineWin = ( rowOrColumnNumber, whereToCheck ) => {
     if ( whereToCheck !== ROW && whereToCheck !== COLUMN ) {
-      console.log(`Somehow whereToCheck is wrong. Current val is ${whereToCheck}`);
+      alert(`Somehow whereToCheck is wrong. Current val is ${whereToCheck}`);
       return false;
     }; 
     const matchingSquares = gameBoard.squares.filter( ( square ) => square[whereToCheck] === rowOrColumnNumber );
@@ -81,26 +81,26 @@ const makeEndStates = ( function() {
       };
 
         // Check only the diagonal(s) that contain the current square
-        if (firstDiagonal.includes(currentSquare)) {
-          if (firstDiagonal.every(square => square.getCurrentMark() === currentSquare.getCurrentMark())) {
-              return true;
-          };
+      if (firstDiagonal.includes(currentSquare)) {
+        if (firstDiagonal.every(square => square.getCurrentMark() === currentSquare.getCurrentMark())) {
+          return true;
+        };
       };
       if (secondDiagonal.includes(currentSquare)) {
-          if (secondDiagonal.every(square => square.getCurrentMark() === currentSquare.getCurrentMark())) {
-              return true;
-          };
+        if (secondDiagonal.every(square => square.getCurrentMark() === currentSquare.getCurrentMark())) {
+          return true;
+        };
       };
       return false;
   };
 
   const checkForWin = ( rowNumber, columnNumber ) => { 
     if ( !validateRowOrColumn( rowNumber ) ) {
-      console.log(`Somehow rowNumber is wrong. Current val is ${rowNumber}`);
+      alert(`Somehow rowNumber is wrong. Current val is ${rowNumber}`);
       return false;
     }; 
     if ( !validateRowOrColumn( columnNumber ) ) {
-      console.log(`Somehow columnNumber is wrong. Current val is ${columnNumber}`);
+      alert(`Somehow columnNumber is wrong. Current val is ${columnNumber}`);
       return false;
     }; 
     return ( checkRowWin( rowNumber ) || checkColumnWin( columnNumber ) || checkDiagonalWin ( rowNumber, columnNumber ) );
@@ -111,7 +111,7 @@ const makeEndStates = ( function() {
   gameBoard.checkEndStates = { checkForWin, checkForTie };
 })();
 
-const makeGamePlay = (function() {
+const initGamePlay = (function() {
   const PLAYER_ONE = "playerOne";
   const PLAYER_TWO = "playerTwo";
   let whoseTurn = PLAYER_ONE;
@@ -130,7 +130,6 @@ const makeGamePlay = (function() {
     const square = getSquareById( squareId );
     const currentPlayer = gameBoard[getWhoseTurn()];
     if ( !checkGameActive() ) {
-      console.log( !checkGameActive(), "this ran" );
       return;
     };
 
@@ -166,7 +165,7 @@ const makeGamePlay = (function() {
   gameBoard.gamePlay = { playerTurn, resetGameBoard, getWhoseTurn };
 })();
 
-const makeDisplayController = (function() {
+const initDisplayController = (function() {
   const allSquares = document.querySelectorAll(".game > *");
   const TURN_DISPLAY = "turn-display";
   const dispMsg = document.querySelector(".message");
@@ -201,7 +200,7 @@ const makeDisplayController = (function() {
   };
 })();
 
-const initializeDisplays = ( function () {
+const initDisplays = ( function () {
   gameBoard.displayController.updateTurnDisplay()
   gameBoard.displayController.updatePlayerScore( "playerOne");
   gameBoard.displayController.updatePlayerScore( "playerTwo");
