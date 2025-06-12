@@ -1,20 +1,53 @@
 body {
  box-sizing: border-box;
+ height: 100dvh;
+ width: 100dvw;
+ justify-content: center;
+ align-items: center;
 }
 
 body,
-.container {
+.container,
+.game > *
+{
   display: grid;
 }
 
+body > .container {
+  grid-template-rows: repeat(3, auto);
+}
+
+.player {
+  grid-template-columns: repeat(2, auto);
+}
+
+.playerone,
+.playertwo {
+  grid-template-rows: 40px 60px;
+}
+
+.playerone {
+  background-color: green;
+}
+
+.playertwo {
+  background-color: blue;
+}
+
+.turn {
+  height: 100px;
+  background-color: yellow;
+}
+
 .game {
-  grid-template-columns: repeat(3, 100px);
+  grid-template-columns: repeat(3, clamp(100px, 10dvw, 400px));
+  grid-template-rows: repeat(3, clamp(100px, 10dvw, 400px));
 }
 
 .game > * {
   background-color: red;
-  text-align: center;
-  height: 100px;
-  width: 100px;
-  border: 1px solid black
+  border: 1px solid black;
+  justify-content: center;
+  align-items: center;
+  font-size: clamp( 4rem, 6dvw, 250px);
 }
