@@ -1,5 +1,8 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
- box-sizing: border-box;
  height: 100dvh;
  width: 100dvw;
  justify-content: center;
@@ -8,45 +11,53 @@ body {
 
 body,
 .container,
-.game > *
-{
+.game > * {
   display: grid;
 }
 
 body > .container {
   grid-template-rows: repeat(3, auto);
+  background-color: rgb(243, 243, 243);
+  padding: 3px;
 }
 
 .player {
-  grid-template-columns: repeat(2, auto);
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .playerOne,
 .playerTwo {
-  grid-template-rows: 40px 60px;
+  height: 100px;
+  grid-template-rows: 1fr 2fr;
 }
 
-.playerOne {
-  background-color: green;
-}
-
-.playerTwo {
-  background-color: blue;
+.name,
+.score,
+.turn-display {
+  text-align: center;
+  padding: 0.5rem 0px;
 }
 
 .turn {
   height: 100px;
-  background-color: yellow;
+}
+
+.turn,
+.player {
+  border-radius: 10px;
+  border: 3px solid rgb(255, 255, 255);
 }
 
 .game {
   grid-template-columns: repeat(3, clamp(100px, 10dvw, 400px));
   grid-template-rows: repeat(3, clamp(100px, 10dvw, 400px));
+  gap: 3px;
+  padding: 3px;
 }
 
 .game > * {
-  background-color: red;
-  border: 1px solid black;
+  border-radius: 8%;
+  border: 3px solid rgb(255, 255, 255);
   justify-content: center;
   align-items: center;
   font-size: clamp( 4rem, 6dvw, 250px);

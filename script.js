@@ -3,8 +3,11 @@ const gameBoard = {};
 function createPlayer (name, mark) {
   let playerWins = 0;
   const getPlayerWins = () => playerWins;
-  const increasePlayerWins = () => ++playerWins;
   const resetPlayerWins = () => playerWins = 0;
+  const increasePlayerWins = () => {
+    ++playerWins;
+    gameBoard.displayController.updatePlayerScore( name );
+  }
 
   return { name, mark, getPlayerWins, increasePlayerWins, resetPlayerWins };
 };  
@@ -117,14 +120,17 @@ const makeGamePlay = (function() {
   const checkGameActive = () => isGameActive;
   const swapGameActive = () => isGameActive = !isGameActive;
   const getWhoseTurn = () => whoseTurn;
-  const swapWhoseTurn = () => ( whoseTurn === PLAYER_ONE ) ? whoseTurn = PLAYER_TWO : whoseTurn = PLAYER_ONE;
   const getSquareById = ( matchId ) => gameBoard.squares.find( ( square ) => square.squareId === matchId );
+  const swapWhoseTurn = () => {
+    ( whoseTurn === PLAYER_ONE ) ? whoseTurn = PLAYER_TWO : whoseTurn = PLAYER_ONE;
+    gameBoard.displayController.updateTurnDisplay();
+  }
 
   const playerTurn = ( squareId ) => {
     const square = getSquareById( squareId );
     const currentPlayer = gameBoard[getWhoseTurn()];
-
     if ( !checkGameActive() ) {
+      console.log( !checkGameActive(), "this ran" );
       return;
     };
 
@@ -135,30 +141,27 @@ const makeGamePlay = (function() {
 
     square.changeCurrentMark( currentPlayer.mark );
     gameBoard.displayController.updateElementDisplay( square.squareId, currentPlayer.mark );
-    console.log(`${currentPlayer.name} marked ${square.squareId} with ${square.getCurrentMark()}. For debug player mark is ${currentPlayer.mark}`)
+    swapWhoseTurn();
 
     if ( gameBoard.checkEndStates.checkForWin( square.row, square.column ) ) {
-      console.log(`Player ${currentPlayer.name} has won!`);
+      gameBoard.displayController.showEndOfGame(`Player ${currentPlayer.name} has won!`);
       currentPlayer.increasePlayerWins();
       swapGameActive();
-      swapWhoseTurn();
       return;
     };
 
     if ( gameBoard.checkEndStates.checkForTie() ) {
-      console.log("It was a tie");
+      gameBoard.displayController.showEndOfGame("It was a tie");
       swapGameActive();
-      swapWhoseTurn();
       return;
-    }
-    swapWhoseTurn();
-  }
+    };
+  };
 
   const resetGameBoard = () => {
     gameBoard.squares.forEach( ( square ) => square.resetCurrentMark() );
     gameBoard.displayController.resetFullBoard();
     swapGameActive();
-  }
+  };
 
   gameBoard.gamePlay = { playerTurn, resetGameBoard, getWhoseTurn };
 })();
@@ -166,27 +169,36 @@ const makeGamePlay = (function() {
 const makeDisplayController = (function() {
   const allSquares = document.querySelectorAll(".game > *");
   const TURN_DISPLAY = "turn-display";
+  const dispMsg = document.querySelector(".message");
+  const dispModal = document.querySelector("dialog");
+  const resetButton = document.querySelector(".reset");
 
-  const updateTurnText = () => `${gameBoard.gamePlay.getWhoseTurn()}'s turn`;
+  const updateTurnText = () => `It is ${gameBoard.gamePlay.getWhoseTurn()}'s turn`;
   const updateTurnDisplay = () => updateElementDisplay( TURN_DISPLAY, updateTurnText() );
-  const updatePlayerScore = ( player ) => updateElementDisplay ( `${player} > .score`, gameBoard[player].getPlayerWins() );
-  
-  for ( let square of allSquares ) {
-    square.addEventListener("click", () => gameBoard.gamePlay.playerTurn( square.className ));
-  };
+  const updatePlayerScore = ( player ) => updateElementDisplay ( `${player} > .score`, `Wins: ${gameBoard[player].getPlayerWins()}` );
+  const updateEndOfGameMessage = ( newText ) => dispMsg.textContent = newText;
+  const resetFullBoard = () => allSquares.forEach( ( square ) => square.textContent = "" );
 
   const updateElementDisplay = ( classToMatch , newContent ) => {
     const element = document.querySelector( `.${classToMatch}` );
     element.textContent = newContent;
   };
 
-  const resetFullBoard = () => {
-    for ( let square of allSquares ) square.textContent = "";
+  const showEndOfGame = ( message ) => {
+    updateEndOfGameMessage( message );
+    dispModal.showModal();
+  }
+
+  gameBoard.displayController = { updateElementDisplay, resetFullBoard, updateTurnDisplay, updatePlayerScore, showEndOfGame };
+
+  resetButton.addEventListener("click", () => {
+    gameBoard.gamePlay.resetGameBoard()
+    dispModal.close();  
+  });
+
+  for ( let square of allSquares ) {
+    square.addEventListener("click", () => gameBoard.gamePlay.playerTurn( square.className ));
   };
-
-
-
-  gameBoard.displayController = { updateElementDisplay, resetFullBoard, updateTurnDisplay, updatePlayerScore };
 })();
 
 const initializeDisplays = ( function () {
